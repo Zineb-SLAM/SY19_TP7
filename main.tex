@@ -98,6 +98,135 @@ X.clean = X[,colSums(X) != 0]
 \end{lstlisting}
 Each photo is now described through 3660 non-null features.
 
+\section{Classification}
+
+\subsection{LDA - Linear Discriminant Analysis}
+The first classifier we are going to use is built using the Linear Discriminant Analysis method, based on Bayes' Theorem. This simple and straight-forward model allows us to have a quick idea of the performance we can expect from more complex methods.  
+
+\subsubsection{Method Implementation}
+The function \texttt{lda} is available to fit the model onto a given dataset. It returns the group means that are the average of each predictor in each class. The coefficients of linear discriminants output are used to form the LDA decision rule. The prior probability is the percentage of the response for each class in the observation.
+
+\begin{lstlisting}
+library(MASS)
+model.lda = lda(y ~ ., data = train_set)
+summary(model.lda)
+\end{lstlisting}
+
+Due to the relatively high number of features, it takes a couple of seconds for the algorithm to fit the model.  Once the model is trained, we call the \texttt{predict} function to predict the responses of the test set : 
+
+\begin{lstlisting}
+model.lda.predicted = predict(model.lda, newdata = test_set)
+perfMeasure(model.lda.predicted$class, test_set.y)
+\end{lstlisting}
+
+\begin{verbatim}
+    class
+pred  1  2  3  4  5  6
+1 11  0  0  0  0  5
+2  0  9  0  1  0  0
+3  0  0  9  0  1  2
+4  0  0  0 16  0  0
+5  0  0  0  1  8  3
+6  0  0  0  0  0  8
+
+0.1756757
+\end{verbatim}
+
+\subsubsection{Data visualisation using FDA}
+One of the biggest problems of high-dimensional spaces is the unability to easiliy plot it in order to study and to evaluate the boundaries between each class.
+
+The FDA method allows us to greatly reduce the number of dimensions. More precisely, let $K$ the number of classes, FDA tries to describe the entire dataset using $K-1$ components. In our case, $K = 6$, therefore we can easily reduce the number of dimensions from 3660 down to only 5, which is way easier to plot.
+
+\begin{lstlisting}
+% APPLY FDA TRANSFORMATION
+U = model.lda$scaling
+Z = train_set.X %*% U
+
+dim1 = 1
+dim2 = 2
+
+% PLOT EACH SAMPLE IN THE FDA SPACE
+plot(Z[train_set.y==1,dim1],Z[train_set.y==1,dim2], xlim=range(Z[,dim1]),ylim=range(Z[,dim2]))
+points(Z[train_set.y==2,dim1],Z[train_set.y==2,dim2],pch=2,col=2)
+points(Z[train_set.y==3,dim1],Z[train_set.y==3,dim2],pch=3,col=3)
+points(Z[train_set.y==4,dim1],Z[train_set.y==4,dim2],pch=4,col=4)
+points(Z[train_set.y==5,dim1],Z[train_set.y==5,dim2],pch=5,col=5)
+points(Z[train_set.y==6,dim1],Z[train_set.y==6,dim2],pch=6,col=6)
+\end{lstlisting}
+
+\subsubsection{Dimension Reduction with PCA}
+3660 is a quite high-number of features that slows down both fitting and prediction algorithms, and which may prevent the model from fitting properly. More specifically, the number of dimensions of this dataset is way higher than the number of samples, which means that the model may not be able to capture all relationships between the inputs and the response. One way of improving the performance of the algorithm, both in terms of accuracy and speed, is to decrease the number of inputs.
+
+The FDA methods described previously is a very powerful dimension reduction technique that consists in changing the space using a linear transformation. However, LDA's accuracy score doesn't depends on space transformation, thus coupling FDA with LDA does not make any change.
+
+Another way of reducing the number of features is using a Principal Component Analysis method. Such method aims to find the set of vectors, called principal components, that best describe the features variance. We can then select the best subset of principal components, which is the set of features that yields to the highest performance.
+
+\begin{lstlisting}
+fit_lda_pca = function() {
+	model.lda.pca = lda(y ~ ., data = train_set.pca)
+	model.lda.pca.predicted = predict(model.lda.pca, newdata = test_set.pca)
+	p = perfMeasure(model.lda.pca.predicted$class, test_set.pca$y)
+	return(p)
+}
+
+\end{lstlisting}
+
+The function \texttt{prcomp} is available to compute the set of principal components using linear transformations. The same sequence of linear transformations should be applied on the test set as well, using the function \texttt{predict} : 
+\begin{lstlisting}
+pca = prcomp(train_set.X, center = TRUE, scale = TRUE)
+nb_comp = 10 #Arbitrary Number
+
+train_set.pca.X = as.data.frame(pca$x[,1:nb_comp])
+train_set.pca = data.frame(train_set.pca.X)
+train_set.pca["y"] = train_set.y
+
+test_set.pca.X = predict(pca, newdata = test_set.X)[,1:nb_comp]
+test_set.pca = data.frame(test_set.pca.X)
+test_set.pca["y"] = test_set.y
+
+fit_lda_pca()
+\end{lstlisting}
+
+The performance now mostly relies on the number of principal components used to describe the dataset. This parameter should be determined using a cross-validation technique as not to introduce any biais. Since fitting a LDA model does not take much time, we decided to use a 10-fold cross validaiton method between : 
+
+\begin{lstlisting}
+nb_folds = 10
+accs = matrix(0, 100, 1)
+accs[1] = Inf
+for (M in 2:100) {
+	printf("Nb PCA %d", M)
+	a.train_set.pca.X = as.data.frame(pca$x[,1:M])
+	a.train_set.pca = data.frame(a.train_set.pca.X)
+	a.train_set.pca["y"] = train_set.y
+	
+	a.test_set.pca.X = predict(pca, newdata = test_set.X)[,1:M]
+	a.test_set.pca = data.frame(a.test_set.pca.X)
+	a.test_set.pca["y"] = test_set.y
+	
+	folds = createFolds(a.train_set.pca$y, k = nb_folds)
+	
+	acc = 0;
+	for (k in 1:nb_folds) {
+		validation_indexes = folds[[k]]
+		train_set.pca.X = a.train_set.pca.X[-validation_indexes,]
+		train_set.pca = a.train_set.pca[-validation_indexes,]
+		
+		test_set.pca.X = a.train_set.pca.X[validation_indexes,]
+		test_set.pca = a.train_set.pca[validation_indexes,]
+		
+		acc = acc + fit_lda_pca()
+	}
+	
+	acc = acc / nb_folds
+	accs[M] = acc
+}
+min(accs)
+which.min(accs)
+\end{lstlisting}
+
+It turns out that the 27 components yields to the lowest cross-validation error rate of about 14\%. We can now apply this model on the test set : the error-rate is about 16.2\%.
+
+
 
 
 \end{document}
