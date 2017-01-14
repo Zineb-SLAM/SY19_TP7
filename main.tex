@@ -89,41 +89,41 @@
 \section{Context}
 This exercice aims to build the best classifier to recognize facial expressions based on a normalized photo of a given subject. The model will take advantage of a database of about 200 photos to learn how to classify the six different expressions : happiness, surprise, sadness, disgust, anger and fear.
 
-\section{Dataset Description}
-The very first step of our method consists in taking a look at the raw dataset. The dataset comprises 216 black and white photos of size 60 by 70, thus each case is described through 4200 features. The features are digits of the face feature and the responses describe the facial expression. There are 6 kind of reponses 1 to 6. Below an example of each face expression:
+\section{Data set Description}
+The very first step of our method consists in taking a look at the raw data set. The data set comprises 216 black and white photos of size 60 by 70, thus each case is described through 4200 features. The features are digits of the face feature and the responses describe the facial expression. There are 6 kind of responses 1 to 6. Below an example of each face expression:
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/happy_X32_y1.png}
+	\includegraphics[width=0.6\linewidth]{Figures/happy_X32_y1.png}
 	\captionof{figure}{y=1 Happy}
 	\label{fig:y=1}
 \end{center}
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/shocked_X8_y2.png}
+	\includegraphics[width=0.6\linewidth]{Figures/shocked_X8_y2.png}
 	\captionof{figure}{y=2 Shocked}
 	\label{fig:y=2}
 \end{center}
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/cry_X132_y3.png}
+	\includegraphics[width=0.6\linewidth]{Figures/cry_X132_y3.png}
 	\captionof{figure}{y=3 Crying}
 	\label{fig:y=3}
 \end{center}
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/mad_X54_y4.png}
+	\includegraphics[width=0.6\linewidth]{Figures/mad_X54_y4.png}
 	\captionof{figure}{y=4 Mad}
 	\label{fig:}
 \end{center}
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/angry_X10_y5.png}
+	\includegraphics[width=0.6\linewidth]{Figures/angry_X10_y5.png}
 	\captionof{figure}{y=5 Angry}
 	\label{fig:y=6}
 \end{center}
 
 \begin{center}
-	\includegraphics[width=0.8\linewidth]{Figures/sad_X204_y6.png}
+	\includegraphics[width=0.6\linewidth]{Figures/sad_X204_y6.png}
 	\captionof{figure}{y=6 Sad}
 	\label{fig:y=6}
 \end{center}
@@ -164,16 +164,20 @@ First we perform a cross validation to pick the best k number of neighbors.
 \subsubsection{Model Implementation}
 To perform a CV on KNN we use the function \textbf{kknn.train} defined in the library \textbf{kknn}. As we do not have that much observation we can afford the computation of the Leave One Out.
 \begin{lstlisting}
+library("kknn")
 model.kknn= train.kknn(y~., data= train_set, kmax = 30)
 model.kknn.best.k = model.kknn$best.parameters$k
 \end{lstlisting}
 We find 28 to be the number of neighbors that minimizes the train error. Now we use this k on our knn model.
 
 \begin{lstlisting}
+library('FNN')
 model.knn.pred= knn(train.X, test.X, train.Y ,k=model.kknn$best.parameters$k)
 \end{lstlisting}
 
-The knn gives out the index of the 28 closest points to each observation. We then get the class of each of those neighbors using the function\textbf{ attr}. We count the cardinal of each class and pick the highest one to be the response of the observation.
+The KNN gives out the index of the 28 closest points to each observation. We then get the class of each of those neighbors using the function\textbf{ attr}. We count the cardinal of each class and pick the highest one to be the response of the observation.
+\pagebreak
+
 \begin{lstlisting}
 n_test = nrow(test.X)
 #Vector with prediction of the class of each test observation
@@ -184,7 +188,6 @@ for(i in 1:n_test)
 
     #Class of each neighbor of the observation i
     iline = train_set$y[attr(model.knn.pred, 'nn.index')[i,]]
-
     # Count votes for each class
     count1 = length(which(iline[] == 1)) 
     count2 = length(which(iline[] == 2)) 
@@ -192,24 +195,20 @@ for(i in 1:n_test)
     count4 = length(which(iline[] == 4)) 
     count5 = length(which(iline[] == 5)) 
     count6 = length(which(iline[] == 6)) 
-
     #Vector of votes
     votes       = c(count1, count2, count3, count4, count5, count6)
-
     #I need to select the class with the highest number of neighbors
     max_vote = which.max(votes)
-
     knn_pred[i] = max_vote
 }
 \end{lstlisting}
-The vector knn\_pred has the response of each test observation. We construct the confusion matrix by comparing the true responses to the predicted ones. The values that are not n the diagonal are the miss-classified ones. We also compute the error.
-
+The vector \textbf{knn\_pred} has the predicted response of each test observation. We construct the confusion matrix by comparing the true responses to the predicted ones. The values that are not in the diagonal are the miss-classified ones. We also compute the error.
 \begin{lstlisting}
 confusion_matrix_knn = table(predict=knn_pred , truth= test_set$y)
 errors_knn = sum(knn_pred!=test_set$y)/length(test_set$y)
 # 26.3% errors
 \end{lstlisting}
-
+\pagebreak
 \subsubsection{Model Analysis}
 The results of the KNN are shown below.
 \begin{verbatim}
@@ -223,7 +222,7 @@ predict  1  2  3  4  5  6
       6  2  0  0  0  0  2
 0.2638889
 \end{verbatim}
-We notice that 19 observations were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. Therefore we will use more complex models in the next parts to minimize the test error. 26\% is out highest bound of the test error.
+We notice that 19 observations out of 72 were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. Therefore we will use more complex models in the next parts to minimize the test error. \textbf{But we know that 26\% will be our upper bound for the test error.}
 
 \pagebreak
 
@@ -356,48 +355,87 @@ It turns out that the 27 components yields to the lowest cross-validation error 
 
 
 \pagebreak
+\pagebreak
 \subsection{Support Vector Machines}
-In this part we discuss another approach of classification : The support vector machine with the kernel option. We will use a support vector approach to predict the facial expression using face features expressions
+In this part we discuss another approach of classification : The Support Vector Machine with the kernel option. Our data set has a very large number of features compared to observations \textbf{(p>>n)}. This means that likely we could use a linear kernel. In Other words we want to compare SVMs with a linear kernel.
 
 \subsubsection{Model Implementation}
-The \textbf{e1071} library includes the \textbf{tune()} function, to perform cross-validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
+The \textbf{e1071} library includes the \textbf{tune()} function, to perform Cross-Validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
 \begin{lstlisting}
-model.tune= tune(svm, y~., data= svm.train, kernel= "linear", ranges= list(c(0.1, 1, 10), gamma= c(0.1, 1, 10)))
+library('e1071')
+model.tune = tune(svm, y~., data= train_set, kernel= "linear", ranges= list(c(0.01, 0.1, 1, 10), gamma= c(0.1, 1, 10)))
 summary(model.tune)
 \end{lstlisting}
+The results of the 10 fold Cross validation are:
 
-We see that cost=0.1 results in the lowest cross-validation error rate. 
-The tune() function stores the best model obtained, which can be accessed as follows: \textbf{model.tune\$best.parameters} We can now perform the SVM with those best tuning parameters.
+\begin{verbatim}
+Parameter tuning of ‘svm’:
 
-The argument scale=TRUE tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one; we thought it would be more...
-This data set has a very large number of features compared to observations. This means that likely we could use a linear kernel. In Other words we want to compare SVMs with a linear kernel.
+- sampling method: 10-fold cross validation 
+
+- best parameters:
+ Var1 gamma
+ 0.01   0.1
+\end{verbatim}
+We see the cost=0.01 results in the lowest cross-validation error rate as well as gamma=0.1.\\
+The \textbf{tune()} function stores the best model that can be accessed as follows: \textbf{model.tune\$best.parameters} We can now perform the SVM model with those best tuning parameters.
+The argument \textbf{scale=TRUE} tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one;\textbf{ Should we scale (???)}
 
 \begin{lstlisting}
-model.svm= svm(y~., data=svm.train, kernel= 'linear', gamma= model.tune$best.parameters$gamma , cost= model.tune$best.parameters$Var1)
-summary(model.svm) 
+model.svm= svm(y~., data= train_set, kernel= 'linear', gamma= model.tune$best.parameters$gamma, cost= model.tune$best.parameters$Var1)
+summary(model.svm)
 \end{lstlisting}
-We see that the function identified 6 classes. This tells us, for instance, that a linear kernel was used with cost=... , 
-and that there were ... support vectors, .. in class 1 and ... in class 2, ....
 
+The results are displayed below:
+\begin{verbatim}
+Parameters:
+   SVM-Type:  C-classification 
+ SVM-Kernel:  linear 
+       cost:  0.01 
+      gamma:  0.1 
+
+Number of Support Vectors:  124
+ ( 14 22 22 20 21 25 )
+
+Number of Classes:  6 
+Levels: 
+ 1 2 3 4 5 6
+\end{verbatim}
+We see that the function identified 6 classes. This tells us, for instance, that a linear kernel was used with cost=0.01 , and that there were 124 support vectors, 14 in class 1, 22 in class 2, 22 in class 3, 20 in class 4, 21 in class 5 and 25 in class 6. \textbf{(Does it tell us something???)}
+\\
 We can now plot the support vector classifier obtained:
-
 \begin{lstlisting}
 plot(x= model.svm, data= svm.train, formula= X1~X2)
 \end{lstlisting}
-
-We(Note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
+We Note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
 The region that is assigned to each class is shown on the right (light blue for 1, ...). The decision boundary between the two classes is linear 
 (because we used the argument kernel="linear"). 
-We see that in this case only 6 observations are misclassified. 
 
-Training errors = we only made 6 errors on the training data
 \begin{lstlisting}
-confusion_matrix_train= table(model.svm$fitted, svm.train$y)
-train_errors= sum(model.svm$fitted != svm.train$y)/length(svm.train$y)
+confusion_matrix_svm.train = table(model.svm$fitted, train_set$y)
+errors_svm.train = sum(model.svm$fitted != train_set$y)/length(train_set$y)
+\end{lstlisting}
+\begin{verbatim}
+   1  2  3  4  5  6
+  1 22  0  0  0  0  0
+  2  0 20  0  0  0  0
+  3  0  0 24  0  0  0
+  4  0  0  0 27  0  0
+  5  0  0  0  0 25  0
+  6  0  0  0  0  0 26
+0
+\end{verbatim}
+Our train error is null, no observation were miss-classified while training the model.
+
+After building the model we can call the function predict with the test data set and compute the test error.
+\begin{lstlisting}
+yhat= predict(model.svm, newdata= test_set)
+confusion_matrix_svm.test= table(yhat, test_set$y)
+errors_svm.test = sum(yhat!=test_set$y)/length(test_set$y)
+plot(x= model.svm, data= test_set, formula= X1~X2)
 \end{lstlisting}
 
 \subsubsection{Model Analysis}
-
 
 \section{Conclusion}
 \end{document}
