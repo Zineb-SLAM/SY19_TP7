@@ -7,7 +7,7 @@
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage[colorinlistoftodos]{todonotes}
+%\usepackage[colorinlistoftodos]{todonotestfa}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{amsmath}
@@ -90,7 +90,7 @@
 This exercice aims to build the best classifier to recognize facial expressions based on a normalized photo of a given subject. The model will take advantage of a database of about 200 photos to learn how to classify the six different expressions : happiness, surprise, sadness, disgust, anger and fear.
 
 \section{Dataset Description}
-The very first step of our method consists in taking a look at the raw dataset. The dataset comprises 216 black and white photos of size 60 by 70, thus each case is described through 4200 features. The features are digits of the face feature and the responses describe the facial expression. There are 6 kind of reponses 1 to 6. Below an example of each face expression:
+The very first step of our method consists in taking a look at the raw dataset. The dataset comprises 216 black and white photos of size 60 by 70, thus each case is described through 4200 features. Each feature represents a single pixel of the face, and the responses describe the facial expression. There are 6 kind of reponses : 1 to 6, each of which is described through 36 different photos. Below an example of each face expression:
 
 \begin{center}
 	\includegraphics[width=0.8\linewidth]{Figures/happy_X32_y1.png}
@@ -128,19 +128,21 @@ The very first step of our method consists in taking a look at the raw dataset. 
 	\label{fig:y=6}
 \end{center}
 
- It turns out that a non-negligible part of those features are null, hence should be removed from the dataset.
-
-The following code removes the null features from the dataset :
+ It turns out that a non-negligible part of those features are null. Any null features may prevent the following classifiers to fit properly. The following code removes the null features from the dataset :
 \begin{lstlisting}
 X.clean= X[,colSums(X) != 0]
 \end{lstlisting}
-Each photo is now described through 3660 non-null features.
-\pagebreak
+Each photo is now described through 3660 non-null features. Nevertheless, 3660 is still a very high number of features which prevents us from properly visualizing the dataset
 
-\section{Classification}
+\section{Measure to Compare Models}
+Before building any model, we have to properly define the measures we will use later to compare their performance. In a classification problem, "accuracy" is often used. It is defined by :
+$$
+A = \frac{\text{Number of Good Predictions}}{\text{Number of Cases}}
+$$
 
-\subsection{K Nearest Neighbors}
-First we separate data between a train and a test data frame.
+This is a very simple measure that may cause some issues when applied on classification problems that deal with skewed classes. For instance, let $A$ and $B$, two classes. $A$ contains 95\% of the dataset, while $B$ contains the remaining 5\%. Let $M$ a pretty bad classifier which classifies the whole dataset in class $A$. According to the definition stated above, this classifier has an accuracy of 95\%, which is excellent. In this case, more specific performance measures have to be applied.
+
+However, our current classification problem does not deal with skewed class since all classes are equally-represented in the dataset. Therefore, we will be able to run this performance measure without any important issue. This measure will be applied on the test set in order not to include any bias.
 
 \begin{lstlisting}
 set.seed (1)
@@ -158,6 +160,10 @@ train_set= data.frame(train.X, y= as.factor(train.Y))
 test_set= data.frame(test.X, y= as.factor(test.Y))
 \end{lstlisting}
 
+\pagebreak
+\section{Classification}
+
+\subsection{K Nearest Neighbors}
 We can start our study with a very simple model like the KNN to have an idea about the error. To perform a multi-classification in KNN we choose the k closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. 
 First we perform a cross validation to pick the best k number of neighbors.
 
