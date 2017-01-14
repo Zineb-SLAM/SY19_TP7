@@ -165,7 +165,9 @@ test_set= data.frame(test.X, y= as.factor(test.Y))
 \section{Classification}
 
 \subsection{K Nearest Neighbors}
-We can start our study with a very simple model like the KNN to have an idea about the error. To perform a multi-classification in KNN we choose the k closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. 
+We can start our study with a very simple model like the KNN to have an idea about the Bayes error rate, which is the minimum achievable error rate. 
+
+To perform a multi-classification in KNN we choose the k closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. 
 First we perform a cross validation to pick the best k number of neighbors.
 
 \subsubsection{Model Implementation}
@@ -234,7 +236,7 @@ We notice that 19 observations out of 72 were miss-classified, we thus get 26\% 
 \pagebreak
 
 \subsection{LDA - Linear Discriminant Analysis}
-The first classifier we are going to use is built using the Linear Discriminant Analysis method, based on Bayes' Theorem. This simple and straight-forward model allows us to have a quick idea of the performance we can expect from more complex methods.  
+The next classifier we are going to use is built using the Linear Discriminant Analysis (LDA) method, based on Bayes' Theorem. This simple and straight-forward model allows us to have a quick idea of the performance we can expect from more complex methods.  
 
 \subsubsection{Method Implementation}
 The function \texttt{lda} is available to fit the model onto a given dataset. It returns the group means that are the average of each predictor in each class. The coefficients of linear discriminants output are used to form the LDA decision rule. The prior probability is the percentage of the response for each class in the observation.
@@ -266,7 +268,7 @@ pred  1  2  3  4  5  6
 \end{verbatim}
 
 \subsubsection{Data visualisation using FDA}
-One of the biggest problems of high-dimensional spaces is the unability to easiliy plot it in order to study and to evaluate the boundaries between each class.
+One of the biggest problems of high-dimensional spaces is the unability to easiliy plot it in order to study and to evaluate the boundaries that separate each class.
 
 The FDA method allows us to greatly reduce the number of dimensions. More precisely, let $K$ the number of classes, FDA tries to describe the entire dataset using $K-1$ components. In our case, $K = 6$, therefore we can easily reduce the number of dimensions from 3660 down to only 5, which is way easier to plot.
 
@@ -286,6 +288,12 @@ points(Z[train_set.y==4,dim1],Z[train_set.y==4,dim2],pch=4,col=4)
 points(Z[train_set.y==5,dim1],Z[train_set.y==5,dim2],pch=5,col=5)
 points(Z[train_set.y==6,dim1],Z[train_set.y==6,dim2],pch=6,col=6)
 \end{lstlisting}
+
+\begin{center}
+	\includegraphics[width=0.6\linewidth]{Figures/plot_fda_1_2.png}
+	\captionof{figure}{Plot of the train set using a projection onto the first two components of the FDA space.}
+	\label{fig:plot_fda_1_2}
+\end{center}
 
 \subsubsection{Dimension Reduction with PCA}
 3660 is a quite high-number of features that slows down both fitting and prediction algorithms, and which may prevent the model from fitting properly. More specifically, the number of dimensions of this dataset is way higher than the number of samples, which means that the model may not be able to capture all relationships between the inputs and the response. One way of improving the performance of the algorithm, both in terms of accuracy and speed, is to decrease the number of inputs.
@@ -357,9 +365,21 @@ min(accs)
 which.min(accs)
 \end{lstlisting}
 
-It turns out that the 27 components yields to the lowest cross-validation error rate of about 14\%. We can now apply this model on the test set : the error-rate is about 16.2\%.
+We ran this algorithm many times and we found different results depending on the cross-validation split : 
 
+\begin{center}
+	\includegraphics[width=0.6\linewidth]{Figures/lda_pca_cv.png}
+	\captionof{figure}{10 fold cross validation to find the best number of components to use for LDA.}
+	\label{fig:lda_pca_cv}
+\end{center}
 
+\begin{center}
+	\includegraphics[width=0.6\linewidth]{Figures/lda_pca_cv_2.png}
+	\captionof{figure}{Another 10 fold cross validation to find the best number of components to use for LDA.}
+	\label{fig:lda_pca_cv_2}
+\end{center}
+
+It turns out that the 45 components yields to the lowest cross-validation error rate of about 17\%. We can now apply this model on the test set : the error-rate can be as low as 12\%.
 
 \pagebreak
 \pagebreak
