@@ -387,9 +387,14 @@ It turns out that the 45 components yields to the lowest cross-validation error 
 
 Neural Networks are a set of methods based on a collection of computation units called artificial neurons, each of which is basically capable of extracting a new features based on a linear combination of its inputs. The training algorithms then consists in tweaking each neuron so that it extracts the feature that minimize the error-rate of the whole network.
 
-These classifiers are very powerful, but this power comes to a price of a very long training time, along with a non-convex fiting function to optimize, and a high number of parameters one should tweak in order to come up with the best network for a given dataset. To simplify our analysis, we will only deal with single hidden layer perceptrons. 
+These classifiers are very powerful, but this power comes to a price of : 
+\begin{itemize}
+	\item a very long training time
+	\item a non-convex error function to optimize, which means the optimization algorithm may reach a local optima
+	\item a high number of parameters one should tweak in order to come up with the best network for a given dataset
+\end{itemize}
 
-In R, the library \texttt{nnet} is available to build simple neural network classifiers and regression models : 
+To simplify our analysis, we will only deal with single hidden layer perceptrons. In R, the library \texttt{nnet} is available to build simple neural network classifiers and regression models : 
 \begin{lstlisting}
 library(nnet)
 
@@ -412,12 +417,12 @@ $$
 with $M$ the number of neurons, $P$ the number of features and $K$ the number of classes. In our case, $W = 3667M + 1$.
  therefore, the only parameter we have to tweak is the number of neurons contained in the hidden layer. This number should be determined using a cross-validation technique. However, even though $W$ doesn't grow exponentionally, it increases too fast for the fitting algorithm to perform in a timely manner. 
  
- We were able to fit a neural network with only 2 and 5 hidden neurons, it took respectively less than a minute and about 10 minutes to train the model. They both yielded to miserable error rates of 85\% and 50\%. The main problem here is the ridiculously low number of neurons, a good rule of thumb being choosing $M$ between $K$ and $P$.
+ We were able to fit a neural network with only 2 and 5 hidden neurons, it took respectively less than a minute and about 10 minutes to train the model. They both yield to miserable error rates of 85\% and 50\%. The main problem here is the ridiculously low number of neurons, a good rule of thumb being choosing $M$ between $K$ and $P$.
  
 The main way to carry the analysis further would be to first apply a dimension reduction algorithm on the inputs.
 
 \subsubsection{Dimension Reduction}
-One such reduction algorithm is the FDA that we have already described previously. We now only have to deal with 5 different inputs, which is way easier for the optimization algorithm to work with. 
+One such reduction algorithm is the FDA that we have already described previously. We now only have to cope with 5 different inputs, which is way easier for the optimization algorithm to work with. 
 
 A 10-fold cross-validation algorithm can be performed in a timely manner. $M = 95$ yields to a very low error-rate of 5\% on the validaiton set, but a quite high error-rate of 27\% on the test set. This difference in the error-rate comes from the fact that a single hidden layer tend to overfit with a high number of neurons.
 
@@ -430,13 +435,13 @@ A 10-fold cross-validation algorithm can be performed in a timely manner. $M = 9
 We could also take advantage of a Principal Component Analysis method to decrease the dimension. However, this would mean performing a nested cross-validation method in order to find the best number of components that goes with the best number of neurons.
 
 \subsubsection{Regularization}
- It is possible to prevent the neural network from overfitting by using a regularization technique that basically constraints each neuron's weights using a parameter $\Lambda$. The main idea is now to use a high number of neurons, before finding the best regularization parameter  $\Lambda$ by cross-validation.
+ It is possible to prevent the neural network from overfitting by using a regularization technique that basically constraints each neuron's weights using a parameter $\lambda$. The main idea is now to use a high number of neurons, before finding the best regularization parameter  $\lambda$ by cross-validation.
  
- We first apply this method on the dataset whose dimensions have been reduced using the FDA technique. Using $M = 50$, a fairly high number compared to the number of inputs and outputs, the best $\Lambda$ seems to be 2, which yields to an error-rate ranged from 16\% to 20\% depending on the optimization results.
+ We first apply this method on the dataset whose dimensions have been reduced using the FDA technique. Using $M = 50$, a fairly high number compared to the number of inputs and outputs, the best $\lambda$ seems to be 2, which yields to an error-rate ranged from 16\% to 20\% depending on the optimization results.
  
  \begin{center}
  	\includegraphics[width=0.6\linewidth]{Figures/nnet_fda_reg_cv.png}
- 	\captionof{figure}{10 fold cross validation to find the best regularization term $\Lambda$}
+ 	\captionof{figure}{10 fold cross validation to find the best regularization term $\lambda$}
  	\label{fig:nnet_fda_reg_cv}
  \end{center}
 
