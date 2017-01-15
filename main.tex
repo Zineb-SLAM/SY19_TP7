@@ -493,7 +493,6 @@ We obtain an error-rate of 27\% with the raw dataset, which is better than using
 \pagebreak
 \subsection{Support Vector Machines}
 In this part we discuss another approach of classification : The Support Vector Machine with the kernel option. Our data set has a very large number of features compared to observations \textbf{(p>>n)}. This means that likely we could use a linear kernel. In Other words we want to compare SVMs with a linear kernel.
-
 \subsubsection{Model Implementation}
 The \textbf{e1071} library includes the \textbf{tune()} function, to perform Cross-Validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
 \begin{lstlisting}
@@ -502,25 +501,20 @@ model.tune = tune(svm, y~., data= train_set, kernel= "linear", ranges= list(c(0.
 summary(model.tune)
 \end{lstlisting}
 The results of the 10 fold Cross validation are:
-
 \begin{verbatim}
 Parameter tuning of ‘svm’:
-
 - sampling method: 10-fold cross validation 
-
 - best parameters:
  Var1 gamma
  0.01   0.1
 \end{verbatim}
 We see the cost=0.01 results in the lowest cross-validation error rate as well as gamma=0.1.\\
 The \textbf{tune()} function stores the best model that can be accessed as follows: \textbf{model.tune\$best.parameters} We can now perform the SVM model with those best tuning parameters.
-The argument \textbf{scale=TRUE} tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one;\textbf{ Should we scale (???)}
-
+The argument \textbf{scale=TRUE} tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one;\textbf{ Should we scale (???)}. If the response has more than two levels, then the svm() function will perform multi-classification using the One-Versus-One approach.
 \begin{lstlisting}
 model.svm= svm(y~., data= train_set, kernel= 'linear', gamma= model.tune$best.parameters$gamma, cost= model.tune$best.parameters$Var1)
 summary(model.svm)
 \end{lstlisting}
-
 The results are displayed below:
 \begin{verbatim}
 Parameters:
@@ -528,24 +522,28 @@ Parameters:
  SVM-Kernel:  linear 
        cost:  0.01 
       gamma:  0.1 
-
 Number of Support Vectors:  124
  ( 14 22 22 20 21 25 )
-
 Number of Classes:  6 
 Levels: 
  1 2 3 4 5 6
 \end{verbatim}
-We see that the function identified 6 classes. This tells us, for instance, that a linear kernel was used with cost=0.01 , and that there were 124 support vectors, 14 in class 1, 22 in class 2, 22 in class 3, 20 in class 4, 21 in class 5 and 25 in class 6. \textbf{(Does it tell us something???)}
-\\
+We see that the function identified 6 classes. This tells us, for instance, that a linear kernel was used with cost=0.01 , and that there were 124 support vectors, 14 in class 1, 22 in class 2, 22 in class 3, 20 in class 4, 21 in class 5 and 25 in class 6. 
 We can now plot the support vector classifier obtained:
 \begin{lstlisting}
 plot(x= model.svm, data= svm.train, formula= X1~X2)
 \end{lstlisting}
-We Note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
-The region that is assigned to each class is shown on the right (light blue for 1, ...). The decision boundary between the two classes is linear 
-(because we used the argument kernel="linear"). 
+\begin{center}
+	\includegraphics[width=0.8\linewidth]{Figures/svm_train_plot.png}
+	\captionof{figure}{SVM on train set observations}
+	\label{SVM on train set}
+\end{center}
 
+We Note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
+The region that is assigned to each class is shown on the right (light blue for 1 to dark purple for 6). The decision boundary between the two classes is linear 
+(because we used the argument kernel="linear"). 
+\\We then computer the errors and the confusion matrix.
+\pagebreak
 \begin{lstlisting}
 confusion_matrix_svm.train = table(model.svm$fitted, train_set$y)
 errors_svm.train = sum(model.svm$fitted != train_set$y)/length(train_set$y)
@@ -560,17 +558,42 @@ errors_svm.train = sum(model.svm$fitted != train_set$y)/length(train_set$y)
   6  0  0  0  0  0 26
 0
 \end{verbatim}
-Our train error is null, no observation were miss-classified while training the model.
+Our train error is null, no observation were miss-classified while training the model. This is not really surprising as we have only 144 observations but 3360 variables. Since p>>n it was easy for the model to define a hyperplane that fully separates the classes. \\
 
-After building the model we can call the function predict with the test data set and compute the test error.
+However we are more interested in the support vector classifier’s performance on the test observations. We call the predict function that takes the SVM model as parameter.
 \begin{lstlisting}
 yhat= predict(model.svm, newdata= test_set)
 confusion_matrix_svm.test= table(yhat, test_set$y)
 errors_svm.test = sum(yhat!=test_set$y)/length(test_set$y)
 plot(x= model.svm, data= test_set, formula= X1~X2)
 \end{lstlisting}
+\begin{verbatim}
+ yhat  1  2  3  4  5  6
+   1 12  0  0  0  0  1
+   2  0 13  0  0  0  0
+   3  0  0 10  0  1  2
+   4  0  1  0  9  3  0
+   5  0  2  2  0  7  0
+   6  2  0  0  0  0  7
+ 0.1944444
+\end{verbatim}
 
+\begin{center}
+	\includegraphics[width=0.8\linewidth]{Figures/svm_test_plot.png}
+	\captionof{figure}{SVM on test set observations}
+	\label{SVM on test set}
+\end{center}
 \subsubsection{Model Analysis}
+Hence, with cost=0.1, 20 observations were miss-classified, our test error = 19,4\%.
 
 \section{Conclusion}
+\begin{center}
+\begin{tabular}{l c}
+\textbf{Model} & \textbf{Percentage of error} \\
+KNN & 26.8\% \\
+LDA & \\
+NNET & \\
+SVM & 19.4\%
+\end{tabular}
+\end{center}
 \end{document}
