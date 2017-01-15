@@ -584,15 +584,20 @@ plot(x= model.svm, data= test_set, formula= X1~X2)
 	\label{SVM on test set}
 \end{center}
 \subsubsection{Model Analysis}
-Hence, with cost=0.1, 20 observations were miss-classified, our test error = 19,4\%.
+Hence, with cost=0.1, 20 observations were miss-classified, our test error is equal to 19,4\%.
 
+
+\pagebreak
 \section{Conclusion}
 \begin{center}
 \begin{tabular}{l c}
 \textbf{Model} & \textbf{Percentage of error} \\
 KNN & 26.8\% \\
-LDA & \\
-NNET & \\
+LDA & 17\% \\
+LDA + PCA & 12/13\% \\
+NNET + FDA & 27\% \\
+NNET + FDA + Regularization & 16\% \\
+Random Forest + FDA & 20\% \\
 SVM & 19.4\%
 \end{tabular}
 \end{center}
