@@ -132,11 +132,15 @@ The very first step of our method consists in taking a look at the raw dataset. 
 	\label{fig:y=6}
 \end{center}
 
- It turns out that a non-negligible part of those features are null. Any null features may prevent the following classifiers to fit properly. The following code removes the null features from the dataset :
+Each portrait is normalized so that the main features of the face are located more or less on the same areas. Therefore, our algorithms will not have to cope with any transformations : translation, rotation and scaling.
+
+It turns out that a non-negligible part of those features are null. Any null features may prevent the following classifiers to fit properly, so we have to remove them as soon as possible. The following code removes the null features from the dataset :
 \begin{lstlisting}
 X.clean= X[,colSums(X) != 0]
 \end{lstlisting}
-Each photo is now described through 3660 non-null features. Nevertheless, 3660 is still a very high number of features which prevents us from properly visualizing the dataset
+Each photo is now described through 3660 non-null features. Nevertheless, 3660 is still a very high number of features which prevents us from properly visualizing the dataset. 
+
+Moreover, the number of cases is very small compared to the number of features : how can only 200 cases be enough to understand how more than 3000 low-level features work together ? It already seems that the small dataset will prevent us from building accurate classifiers.
 
 \section{Measure to Compare Models}
 Before building any model, we have to properly define the measures we will use later to compare their performance. In a classification problem, "accuracy" is often used. It is defined by :
@@ -168,19 +172,18 @@ test_set= data.frame(test.X, y= as.factor(test.Y))
 \section{Classification}
 
 \subsection{K Nearest Neighbors}
-We can start our study with a very simple model like the KNN to have an idea about the Bayes error rate, which is the minimum achievable error rate. 
+We start our study with a very simple model like the KNN to have an idea about the Bayes error rate, which is the minimum achievable error rate. 
 
-To perform a multi-classification in KNN we choose the k closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. 
-First we perform a cross validation to pick the best k number of neighbors.
+To perform a multi-classification in KNN we choose the $k$ closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. The parameter $k$ should be found using a cross-validation method.
 
 \subsubsection{Model Implementation}
-To perform a CV on KNN we use the function \textbf{kknn.train} defined in the library \textbf{kknn}. As we do not have that much observation we can afford the computation of the Leave One Out.
+To perform a CV on KNN we use the function \textbf{kknn.train} defined in the library \textbf{kknn}. As we do not have that many observations, we can afford the computation of the Leave One Out.
 \begin{lstlisting}
 library("kknn")
 model.kknn= train.kknn(y~., data= train_set, kmax = 30)
 model.kknn.best.k = model.kknn$best.parameters$k
 \end{lstlisting}
-We find 28 to be the number of neighbors that minimizes the train error. Now we use this k on our knn model.
+We find 28 to be the number of neighbors that minimizes the train error. Now we use this $k$ on our KNN model.
 
 \begin{lstlisting}
 library('FNN')
@@ -226,15 +229,15 @@ The results of the KNN are shown below.
 \begin{verbatim}
       truth
 predict  1  2  3  4  5  6
-      1 11  0  0  0  0  2
-      2  0 15  0  0  0  1
-      3  0  0  9  0  1  1
-      4  1  1  1  8  2  3
-      5  0  0  2  1  8  1
-      6  2  0  0  0  0  2
+      1 	11  0  0  0  0  2
+      2  	0 15  0  0  0  1
+      3  	0  0  9  0  1  1
+      4  	1  1  1  8  2  3
+      5  	0  0  2  1  8  1
+      6  	2  0  0  0  0  2
 0.2638889
 \end{verbatim}
-We notice that 19 observations out of 72 were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. Therefore we will use more complex models in the next parts to minimize the test error. \textbf{But we know that 26\% will be our upper bound for the test error.}
+We notice that 19 observations out of 72 were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. Therefore we will use more complex models in the next parts to minimize the test error. 
 
 \pagebreak
 
@@ -258,15 +261,6 @@ perfMeasure(model.lda.predicted$class, test_set.y)
 \end{lstlisting}
 
 \begin{verbatim}
-    class
-pred  1  2  3  4  5  6
-1 11  0  0  0  0  5
-2  0  9  0  1  0  0
-3  0  0  9  0  1  2
-4  0  0  0 16  0  0
-5  0  0  0  1  8  3
-6  0  0  0  0  0  8
-
 0.1756757
 \end{verbatim}
 
@@ -388,7 +382,7 @@ It turns out that the 45 components yields to the lowest cross-validation error 
 
 \subsection{Neural Networks}
 
-Neural Networks are a set of methods based on a collection of computation units called artificial neurons, each of which is basically capable of extracting a new features based on a linear combination of its inputs. The training algorithms then consists in tweaking each neuron so that it extracts the feature that minimize the error-rate of the whole network.
+Neural Networks are a set of methods based on a collection of computation units called artificial neurons, each of which is basically capable of extracting a new features based on a linear combination of its inputs. The training algorithms mainly consists in tweaking each neuron so that it extracts the feature that minimize the error-rate of the whole network.
 
 These classifiers are very powerful, but this power comes to a price of : 
 \begin{itemize}
@@ -447,10 +441,14 @@ We could also take advantage of a Principal Component Analysis method to decreas
  	\captionof{figure}{10 fold cross validation to find the best regularization term $\lambda$}
  	\label{fig:nnet_fda_reg_cv}
  \end{center}
+
+\subsubsection{Conclusion}
+Neural Networks are very powerful models than can get as close of a given function as needed. However, it needs a fairly high number of samples to be interesting enough for our needs. Unfortunately, the high number of features prevents us from working properly since each training takes about 10 minutes. A way of speeding things up is to use convolution networks on a computer with enough GPU power to handle the training phase.
+
 \pagebreak
 
 \subsection{Decision Trees}
- In this section, we will discuss a set of machine learning methods called decision trees. A decision tree is a very intuitive way to build a classifier (or a regression model) that aims to split the space into smaller pieces, a simple condition is then defined on a single parameter to guide the decision throughout the decision space. A classification tree is often used when an understable and interpretable classifier is needed. However, in our case, we do not need such property.
+ In this section, we will discuss a set of machine learning methods called decision trees. A decision tree is a very intuitive way to build a classifier (or a regression model) that aims to split the space into smaller pieces, a simple condition is then defined on a single parameter to guide the decision throughout the decision space. A classification tree is often used when an understable and interpretable classifier is needed, however, in our case, we do not need such property.
  
  A single tree can be grown using the function \texttt(tree) available in the library of the same name : 
  \begin{lstlisting}
@@ -495,9 +493,9 @@ We obtain an error-rate of 27\% with the raw dataset, which is better than using
  
 \pagebreak
 \subsection{Support Vector Machines}
-In this part we discuss another approach of classification : The Support Vector Machine with the kernel option. Our data set has a very large number of features compared to observations \textbf{(p>>n)}. This means that likely we could use a linear kernel. In Other words we want to compare SVMs with a linear kernel.
+In this part we discuss another approach of classification : The Support Vector Machine with the kernel option. Our data set has a very large number of features compared to observations \textbf{(p$\gg$n)}. This means that likely we could use a linear kernel. In other words we want to compare SVMs with a linear kernel.
 \subsubsection{Model Implementation}
-The \textbf{e1071} library includes the \textbf{tune()} function, to perform Cross-Validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
+The \textbf{e1071} library includes the \textbf{tune()} function which performs a Cross-Validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
 \begin{lstlisting}
 library('e1071')
 model.tune = tune(svm, y~., data= train_set, kernel= "linear", ranges= list(c(0.01, 0.1, 1, 10), gamma= c(0.1, 1, 10)))
@@ -592,6 +590,7 @@ Hence, with cost=0.1, 20 observations were miss-classified, our test error is eq
 
 \pagebreak
 \section{Conclusion}
+Here is a summary of the error-rate we found for each method used so far : 
 \begin{center}
 \begin{tabular}{l c}
 \textbf{Model} & \textbf{Percentage of error} \\
@@ -601,7 +600,10 @@ LDA + PCA & 12/13\% \\
 NNET + FDA & 27\% \\
 NNET + FDA + Regularization & 16\% \\
 Random Forest + FDA & 20\% \\
-SVM & 19.4\%
+SVM with Linear Kernel & 19.4\%
 \end{tabular}
 \end{center}
+
+The best classifier seems to be the Linear Discriminant Analysis applied on a subset of linar Principal Components.
+
 \end{document}
