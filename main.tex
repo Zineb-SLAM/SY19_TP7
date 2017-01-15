@@ -78,14 +78,14 @@
 
 \begin{abstract}
 
-	This report is the second assignment for the course SY19 : Machine Learning. It is focused on a single exercise : a classification problem. We will describe the methodology we used to build the best model for the given dataset.\\
+	This report is the second assignment for the course SY19 : Machine Learning. It is focused on a single exercise : a classification problem, on which we will describe the methodology we used to build the best model for the given dataset.\\
 	The content presented in this report is the result of the theoretical and practical courses of SY19 taught by Thierry Denoeux and a literature review. We put on a side note that we both have not followed SY09, and only one of us has already done SY02, which prevented us to go deeper in the explanations and analysis sometimes but we made sure to make researches every time it was needed.
 	
 \end{abstract}
 
-
-
 \tableofcontents
+
+\chapter{Classification Exercice}
 
 
 
@@ -98,37 +98,37 @@ The very first step of our method consists in taking a look at the raw dataset. 
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/happy_X32_y1.png}
-	\captionof{figure}{y=1 Happy}
+	\captionof{figure}{$y=1$ Happy}
 	\label{fig:y=1}
 \end{center}
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/shocked_X8_y2.png}
-	\captionof{figure}{y=2 Shocked}
+	\captionof{figure}{$y=2$ Shocked}
 	\label{fig:y=2}
 \end{center}
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/cry_X132_y3.png}
-	\captionof{figure}{y=3 Disapointed}
+	\captionof{figure}{$y=3$ Disapointed}
 	\label{fig:y=3}
 \end{center}
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/mad_X54_y4.png}
-	\captionof{figure}{y=4 Mad}
+	\captionof{figure}{$y=4$ Mad}
 	\label{fig:}
 \end{center}
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/angry_X10_y5.png}
-	\captionof{figure}{y=5 Angry}
+	\captionof{figure}{$y=5$ Angry}
 	\label{fig:y=6}
 \end{center}
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/sad_X204_y6.png}
-	\captionof{figure}{y=6 Sad}
+	\captionof{figure}{$y=6$ Sad}
 	\label{fig:y=6}
 \end{center}
 
@@ -150,7 +150,9 @@ $$
 
 This is a very simple measure that may cause some issues when applied on classification problems that deal with skewed classes. For instance, let $A$ and $B$, two classes. $A$ contains 95\% of the dataset, while $B$ contains the remaining 5\%. Let $M$ a pretty bad classifier which classifies the whole dataset in class $A$. According to the definition stated above, this classifier has an accuracy of 95\%, which is excellent. In this case, more specific performance measures have to be applied.
 
-However, our current classification problem does not deal with skewed class since all classes are equally-represented in the dataset. Therefore, we will be able to run this performance measure without any important issue. This measure will be applied on the test set in order not to include any bias.
+However, our current classification problem does not deal with skewed class since all classes are equally-represented in the dataset. Therefore, we will be able to run this performance measure without any important issue. We may also use the error-rate, which is equal to $1 - A$.
+
+ These measures will be applied on the test set in order not to include any bias.
 
 \begin{lstlisting}
 set.seed (1)
@@ -174,10 +176,10 @@ test_set= data.frame(test.X, y= as.factor(test.Y))
 \subsection{K Nearest Neighbors}
 We start our study with a very simple model like the KNN to have an idea about the Bayes error rate, which is the minimum achievable error rate. 
 
-To perform a multi-classification in KNN we choose the $k$ closest neighbor to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. The parameter $k$ should be found using a cross-validation method.
+To perform a multi-classification in KNN we choose the $k$ closest neighbors to each observation then each neighbor votes for a  class. At the end we pick the class that has the highest votes. The parameter $k$ should be found using a cross-validation method, as not to introduce any biais.
 
 \subsubsection{Model Implementation}
-To perform a CV on KNN we use the function \textbf{kknn.train} defined in the library \textbf{kknn}. As we do not have that many observations, we can afford the computation of the Leave One Out.
+To perform a CV on KNN we use the function \texttt{kknn.train} defined in the library \texttt{kknn}. As we do not have that many observations, we can afford the computation of the Leave One Out.
 \begin{lstlisting}
 library("kknn")
 model.kknn= train.kknn(y~., data= train_set, kmax = 30)
@@ -190,7 +192,7 @@ library('FNN')
 model.knn.pred= knn(train.X, test.X, train.Y ,k=model.kknn$best.parameters$k)
 \end{lstlisting}
 
-The KNN gives out the index of the 28 closest points to each observation. We then get the class of each of those neighbors using the function\textbf{ attr}. We count the cardinal of each class and pick the highest one to be the response of the observation.
+The KNN gives out the index of the 28 closest points to each observation. We then get the class of each of those neighbors using the function \texttt{attr}. We count the cardinal of each class and pick the highest one to be the response of the observation.
 \pagebreak
 
 \begin{lstlisting}
@@ -217,7 +219,7 @@ for(i in 1:n_test)
     knn_pred[i] = max_vote
 }
 \end{lstlisting}
-The vector \textbf{knn\_pred} has the predicted response of each test observation. We construct the confusion matrix by comparing the true responses to the predicted ones. The values that are not in the diagonal are the miss-classified ones. We also compute the error.
+The vector \texttt{knn\_pred} has the predicted response of each test observation. We construct the confusion matrix by comparing the true responses to the predicted ones. The values that are not in the diagonal are the miss-classified ones. We can then compute the error-rate according to the formula described above.
 \begin{lstlisting}
 confusion_matrix_knn = table(predict=knn_pred , truth= test_set$y)
 errors_knn = sum(knn_pred!=test_set$y)/length(test_set$y)
@@ -237,7 +239,7 @@ predict  1  2  3  4  5  6
       6  	2  0  0  0  0  2
 0.2638889
 \end{verbatim}
-We notice that 19 observations out of 72 were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. Therefore we will use more complex models in the next parts to minimize the test error. 
+We notice that 19 observations out of 72 were miss-classified, we thus get 26\% of errors. Considering than the KNN is a very simple non parametric approach we can say that this is not a bad estimation. From now on, we will use more complex models in the next parts to minimize the test error. 
 
 \pagebreak
 
@@ -261,8 +263,19 @@ perfMeasure(model.lda.predicted$class, test_set.y)
 \end{lstlisting}
 
 \begin{verbatim}
-0.1756757
+    class
+p  1  2  3  4  5  6
+1  9  0  0  0  0  1
+2  0 14  0  0  0  0
+3  0  0 10  0  1  1
+4  0  1  0  9  2  0
+5  0  1  2  0  8  1
+6  5  0  0  0  0  7
+
+0.2083333
 \end{verbatim}
+
+This very simple model yields to a decent error-rate of about 20.8\%
 
 \subsubsection{Data visualisation using FDA}
 One of the biggest problems of high-dimensional spaces is the unability to easiliy plot it in order to study and to evaluate the boundaries that separate each class.
@@ -270,14 +283,14 @@ One of the biggest problems of high-dimensional spaces is the unability to easil
 The FDA method allows us to greatly reduce the number of dimensions. More precisely, let $K$ the number of classes, FDA tries to describe the entire dataset using $K-1$ components. In our case, $K = 6$, therefore we can easily reduce the number of dimensions from 3660 down to only 5, which is way easier to plot.
 
 \begin{lstlisting}
-% APPLY FDA TRANSFORMATION
+# APPLY FDA TRANSFORMATION
 U = model.lda$scaling
 Z = train_set.X %*% U
 
 dim1 = 1
 dim2 = 2
 
-% PLOT EACH SAMPLE IN THE FDA SPACE
+# PLOT EACH SAMPLE IN THE FDA SPACE
 plot(Z[train_set.y==1,dim1],Z[train_set.y==1,dim2], xlim=range(Z[,dim1]),ylim=range(Z[,dim2]))
 points(Z[train_set.y==2,dim1],Z[train_set.y==2,dim2],pch=2,col=2)
 points(Z[train_set.y==3,dim1],Z[train_set.y==3,dim2],pch=3,col=3)
@@ -288,14 +301,16 @@ points(Z[train_set.y==6,dim1],Z[train_set.y==6,dim2],pch=6,col=6)
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/plot_fda_1_2.png}
-	\captionof{figure}{Plot of the train set using a projection onto the first two components of the FDA space.}
+	\captionof{figure}{Plot of the training set using a projection onto the first two components of the FDA space.}
 	\label{fig:plot_fda_1_2}
 \end{center}
+
+It turns out that the dataset seems to be fairly separable in the space defined by the FDA components which mean that this dimension reduction may yield to interesting performance results. 
 
 \subsubsection{Dimension Reduction with PCA}
 3660 is a quite high-number of features that slows down both fitting and prediction algorithms, and which may prevent the model from fitting properly. More specifically, the number of dimensions of this dataset is way higher than the number of samples, which means that the model may not be able to capture all relationships between the inputs and the response. One way of improving the performance of the algorithm, both in terms of accuracy and speed, is to decrease the number of inputs.
 
-The FDA methods described previously is a very powerful dimension reduction technique that consists in changing the space using a linear transformation. However, LDA's accuracy score doesn't depends on space transformation, thus coupling FDA with LDA does not make any change.
+The FDA methods described previously is a very powerful dimension reduction technique that consists in changing the space using a linear transformation. However, LDA's accuracy score does not depend on space transformation, thus coupling FDA with LDA would not make any change.
 
 Another way of reducing the number of features is using a Principal Component Analysis method. Such method aims to find the set of vectors, called principal components, that best describe the features variance. We can then select the best subset of principal components, which is the set of features that yields to the highest performance.
 
@@ -311,7 +326,7 @@ fit_lda_pca = function() {
 
 The function \texttt{prcomp} is available to compute the set of principal components using linear transformations. The same sequence of linear transformations should be applied on the test set as well, using the function \texttt{predict} : 
 \begin{lstlisting}
-pca = prcomp(train_set.X, center = TRUE, scale = TRUE)
+pca = prcomp(train_set.X)
 nb_comp = 10 #Arbitrary Number
 
 train_set.pca.X = as.data.frame(pca$x[,1:nb_comp])
@@ -366,23 +381,30 @@ We ran this algorithm many times and we found different results depending on the
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/lda_pca_cv.png}
-	\captionof{figure}{10 fold cross validation to find the best number of components to use for LDA.}
+	\captionof{figure}{10 fold cross validation to find the best number of principal components to use for LDA.}
 	\label{fig:lda_pca_cv}
 \end{center}
 
-\begin{center}
-	\includegraphics[width=0.6\linewidth]{Figures/lda_pca_cv_2.png}
-	\captionof{figure}{Another 10 fold cross validation to find the best number of components to use for LDA.}
-	\label{fig:lda_pca_cv_2}
-\end{center}
+It turns out that about 35 to 35 principal components yields to the lowest cross-validation error rate of about 14\%. We can now apply this model on the test set : we found an error-rate of roughly 20\%.
 
-It turns out that the 45 components yields to the lowest cross-validation error rate of about 17\%. We can now apply this model on the test set : the error-rate can be as low as 12\%.
+\begin{verbatim}
+    class
+p  1  2  3  4  5  6
+1 11  0  0  0  0  1
+2  0 14  0  0  0  0
+3  0  0 11  0  1  2
+4  0  1  0  9  3  0
+5  0  1  1  0  7  0
+6  3  0  0  0  0  7
+
+0.1805556
+\end{verbatim}
 
 \pagebreak
 
 \subsection{Neural Networks}
 
-Neural Networks are a set of methods based on a collection of computation units called artificial neurons, each of which is basically capable of extracting a new features based on a linear combination of its inputs. The training algorithms mainly consists in tweaking each neuron so that it extracts the feature that minimize the error-rate of the whole network.
+Neural Networks are a set of methods based on a collection of computation units called artificial neurons, each of which is basically capable of extracting a new features based on a linear combination of its inputs. The training algorithms mainly consist in tweaking each neuron so that it extracts the feature that minimize the error-rate of the whole network.
 
 These classifiers are very powerful, but this power comes to a price of : 
 \begin{itemize}
@@ -390,8 +412,9 @@ These classifiers are very powerful, but this power comes to a price of :
 	\item a non-convex error function to optimize, which means the optimization algorithm may reach a local optima
 	\item a high number of parameters one should tweak in order to come up with the best network for a given dataset
 \end{itemize}
+To simplify our analysis, we will only deal with single hidden layer perceptrons that uses sigmoid neurons. 
 
-To simplify our analysis, we will only deal with single hidden layer perceptrons. In R, the library \texttt{nnet} is available to build simple neural network classifiers and regression models : 
+In R, the library \texttt{nnet} is available to build simple neural network classifiers and regression models : 
 \begin{lstlisting}
 library(nnet)
 
@@ -411,46 +434,72 @@ $$
 	W = M(P+1) + K(M+1)
 $$
 
-with $M$ the number of neurons, $P$ the number of features and $K$ the number of classes. In our case, $W = 3667M + 1$.
- therefore, the only parameter we have to tweak is the number of neurons contained in the hidden layer. This number should be determined using a cross-validation technique. However, even though $W$ doesn't grow exponentionally, it increases too fast for the fitting algorithm to perform in a timely manner. 
+with $M$ the number of neurons, $P$ the number of features and $K$ the number of classes. In our case, $W \approx 3660M$.
+ therefore, the only parameter we have to tweak is the number of neurons contained in the hidden layer. This number should be determined using a cross-validation technique. However, even though $W$ grows in a linear way, it increases too fast for the fitting algorithm to perform in a timely manner. 
  
- We were able to fit a neural network with only 2 and 5 hidden neurons, it took respectively less than a minute and about 10 minutes to train the model. They both yield to miserable error rates of 85\% and 50\%. The main problem here is the ridiculously low number of neurons, a good rule of thumb being choosing $M$ between $K$ and $P$.
+ We were able to fit a neural network with only 2 and 5 hidden neurons, it took respectively less than a minute and about 10 minutes for our laptop to train the model. They both yield to miserable error rates of 85\% and 50\%. The main problem here is the ridiculously low number of neurons, a good rule of thumb being choosing $M$ between $K$ and $P$.
  
 The main way to carry the analysis further would be to first apply a dimension reduction algorithm on the inputs.
 
 \subsubsection{Dimension Reduction}
 One such reduction algorithm is the FDA that we have already described previously. We now only have to cope with 5 different inputs, which is way easier for the optimization algorithm to work with. 
 
-A 10-fold cross-validation algorithm can be performed in a timely manner. $M = 95$ yields to a very low error-rate of 5\% on the validaiton set, but a quite high error-rate of 27\% on the test set. This difference in the error-rate comes from the fact that a single hidden layer tend to overfit with a high number of neurons.
+A 5-fold cross-validation algorithm can be performed in a timely manner. $M = 95$ yields to a very low error-rate of 5\% on the validaiton set, but a quite high error-rate of 27\% on the test set. This difference in the error-rate comes from the fact that a single hidden layer tend to overfit with a high number of neurons.
 
 \begin{center}
 	\includegraphics[width=0.6\linewidth]{Figures/nnet_fda_cv.png}
-	\captionof{figure}{10 fold cross validation to find the best number of neurons.}
+	\captionof{figure}{5 fold cross validation to find the best number of hidden neurons.}
 	\label{fig:nnet_fda_cv}
 \end{center}
 
-We could also take advantage of a Principal Component Analysis method to decrease the dimension. However, this would mean performing a nested cross-validation method in order to find the best number of components that goes with the best number of neurons.
+\begin{verbatim}
+    class
+p  1  2  3  4  5  6
+1 10  0  0  0  0  0
+2  0 13  0  0  0  0
+3  0  0 10  0  1  1
+4  1  1  2  7  5  0
+5  0  1  0  2  4  1
+6  3  1  0  0  1  8
+
+0.2777778
+\end{verbatim}
+
+We could also take advantage of a Principal Component Analysis method to decrease the dimension. However, this would mean performing a nested cross-validation method in order to find the best number of components that goes along with the best number of neurons. This would definitely take too much time to train, for a result that may not be as interesting as we think.
 
 \subsubsection{Regularization}
  It is possible to prevent the neural network from overfitting by using a regularization technique that basically constraints each neuron's weights using a parameter $\lambda$. The main idea is now to use a high number of neurons, before finding the best regularization parameter  $\lambda$ by cross-validation.
  
- We first apply this method on the dataset whose dimensions have been reduced using the FDA technique. Using $M = 50$, a fairly high number compared to the number of inputs and outputs, the best $\lambda$ seems to be 2, which yields to an error-rate ranged from 16\% to 20\% depending on the optimization results.
+ We first apply this method on the dataset whose dimensions have been reduced using the FDA technique. Using $M = 50$, a fairly high number compared to the number of inputs and outputs, the best $\lambda$ seems to be 2, which yields to an error-rate ranged from 20\% to 24\% depending on the optimization results.
  
  \begin{center}
  	\includegraphics[width=0.6\linewidth]{Figures/nnet_fda_reg_cv.png}
- 	\captionof{figure}{10 fold cross validation to find the best regularization term $\lambda$}
+ 	\captionof{figure}{10 fold cross validation to find the best regularization term $\lambda$.}
  	\label{fig:nnet_fda_reg_cv}
  \end{center}
 
+\begin{verbatim}
+    class
+p  1  2  3  4  5  6
+1 13  0  0  0  0  1
+2  0 13  1  0  0  0
+3  0  0  8  0  1  1
+4  0  2  0  9  3  0
+5  0  1  2  0  7  1
+6  1  0  1  0  0  7
+
+0.2083333
+\end{verbatim}
+
 \subsubsection{Conclusion}
-Neural Networks are very powerful models than can get as close of a given function as needed. However, it needs a fairly high number of samples to be interesting enough for our needs. Unfortunately, the high number of features prevents us from working properly since each training takes about 10 minutes. A way of speeding things up is to use convolution networks on a computer with enough GPU power to handle the training phase.
+Neural Networks are very powerful models than can get as close of a given function as needed. However, it needs a fairly high number of samples to be interesting enough for our needs. Unfortunately, the high number of features prevents us from working properly since each training can take up to about 10 minutes. A way of speeding things up is to use convolution networks on a computer with enough GPU power to handle the training phase.
 
 \pagebreak
 
 \subsection{Decision Trees}
  In this section, we will discuss a set of machine learning methods called decision trees. A decision tree is a very intuitive way to build a classifier (or a regression model) that aims to split the space into smaller pieces, a simple condition is then defined on a single parameter to guide the decision throughout the decision space. A classification tree is often used when an understable and interpretable classifier is needed, however, in our case, we do not need such property.
  
- A single tree can be grown using the function \texttt(tree) available in the library of the same name : 
+ A single tree can be grown using the function \texttt{tree} available in the library of the same name : 
  \begin{lstlisting}
  library(tree)
  
@@ -460,23 +509,49 @@ Neural Networks are very powerful models than can get as close of a given functi
  
   \begin{center}
  	\includegraphics[width=0.6\linewidth]{Figures/tree_full.png}
- 	\captionof{figure}{Decision Tree}
+ 	\captionof{figure}{Decision Tree grown on the original dataset.}
  	\label{fig:tree_full}
  \end{center}
+
+\begin{verbatim}
+    class
+p  1  2  3  4  5  6
+1 10  0  0  0  0  1
+2  0 11  0  0  0  0
+3  0  1  6  1  2  2
+4  0  1  2  3  2  1
+5  1  0  3  3  5  1
+6  3  3  1  2  2  5
+
+0.4444444
+\end{verbatim}
  
  The grown tree has only 12 terminal nodes. The error-rate on the train set is less than 10\%, however the error-rate on the test set is over 40\%, which means this tree tends to overfit the train set. We could slightly improve the performance of the tree by pruning it using a cross validation method, but this would not make much sense for a 3660-dimension space made of very low-level features : how could a handful of conditions on pixel values could be enough to determine the correct emotion in most cases ?
  
- That is why we can once again reduce the number of dimensions using FDA. The tree has a 7 terminal nodes, a 10 fold cross-validation algorithm confirms that there is no need for pruning this tree. This decision tree yields to an error-rate of about 20\%.
+ That is why we can once again reduce the number of dimensions using FDA. The tree has a 7 terminal nodes, a 10 fold cross-validation algorithm confirms that there is no need for pruning this tree. This decision tree yields to an error-rate of about 20\%, which is better but not good enough to stand against other methods.
  
    \begin{center}
  	\includegraphics[width=0.6\linewidth]{Figures/tree_fda.png}
- 	\captionof{figure}{Decision Tree}
+ 	\captionof{figure}{Decision Tree grown on the FDA set.}
  	\label{fig:tree_fda}
  \end{center}
  
+ \begin{verbatim}
+     class
+ p  1  2  3  4  5  6
+ 1 12  0  0  0  0  1
+ 2  0 10  0  0  0  0
+ 3  0  1  8  0  1  1
+ 4  0  1  0  9  3  0
+ 5  0  4  4  0  7  1
+ 6  2  0  0  0  0  7
+
+0.2638889
+ \end{verbatim}
+ 
     \begin{center}
  	\includegraphics[width=0.6\linewidth]{Figures/tree_fda_cv.png}
- 	\captionof{figure}{Best size}
+ 	\captionof{figure}{Cross-Validation to find the best size ot the Decrision Tree grown on the FDA set.}
  	\label{fig:tree_fda_cv}
  \end{center}
  
@@ -489,19 +564,52 @@ model.random_forest =randomForest(as.factor(y) ~ ., data=train_set)
 model.random_forest.predicted = predict(model.random_forest,newdata=test_set,type='response')
 \end{lstlisting}
 
-We obtain an error-rate of 27\% with the raw dataset, which is better than using a single tree. However, the error-rate on the FDA dataset is still 20\%.
+\begin{verbatim}
+# Raw dataset
+
+    class
+p  1  2  3  4  5  6
+1  9  0  0  0  0  1
+2  0 15  0  0  0  0
+3  0  0 11  0  3  2
+4  0  1  0  8  4  0
+5  0  0  1  1  4  0
+6  5  0  0  0  0  7
+
+0.25
+\end{verbatim}
+
+\begin{verbatim}
+# FDA dataset
+
+    class
+p  1  2  3  4  5  6
+1 12  0  0  0  0  1
+2  0 14  0  0  0  0
+3  0  0  9  0  0  1
+4  0  1  0  9  2  0
+5  0  1  3  0  9  1
+6  2  0  0  0  0  7
+
+0.1666667
+\end{verbatim}
+
+We obtain an error-rate of 27\% with the raw dataset, which is better than using a single tree. The error-rate on the FDA dataset is now 16.6\%.
  
 \pagebreak
 \subsection{Support Vector Machines}
-In this part we discuss another approach of classification : The Support Vector Machine with the kernel option. Our data set has a very large number of features compared to observations \textbf{(p$\gg$n)}. This means that likely we could use a linear kernel. In other words we want to compare SVMs with a linear kernel.
+In this part, we discuss another approach of classification : The Support Vector Machine (SVM) with the kernel option. A SVM model tries to find the hyperplan than best separates two classes, defined as the hyperplan that enables each point to be as far as possible from it. If the dataset is not linearly separable, which is our case, SVM relies on a tuning parameter $C$ that control how loose the hyperplan should separate the dataset.
+
+The kernel trick allows the boundaries to be non-linear. However, since our data set has a very large number of features compared to the number of observations $P \gg N$, we should stick with the linear kernel. 
+
 \subsubsection{Model Implementation}
-The \textbf{e1071} library includes the \textbf{tune()} function which performs a Cross-Validation (by default, it performs 10-fold cross-validation) to determine the best tuning parameter.
+The \texttt{e1071} library includes the \texttt{tune()} function which performs by default a 10-fold Cross-Validation to determine the best tuning parameter $C$.
 \begin{lstlisting}
 library('e1071')
 model.tune = tune(svm, y~., data= train_set, kernel= "linear", ranges= list(c(0.01, 0.1, 1, 10), gamma= c(0.1, 1, 10)))
 summary(model.tune)
 \end{lstlisting}
-The results of the 10 fold Cross validation are:
+
 \begin{verbatim}
 Parameter tuning of ‘svm’:
 - sampling method: 10-fold cross validation 
@@ -509,14 +617,15 @@ Parameter tuning of ‘svm’:
  Var1 gamma
  0.01   0.1
 \end{verbatim}
-We see the cost=0.01 results in the lowest cross-validation error rate as well as gamma=0.1.\\
-The \textbf{tune()} function stores the best model that can be accessed as follows: \textbf{model.tune\$best.parameters} We can now perform the SVM model with those best tuning parameters.
-The argument \textbf{scale=TRUE} tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one;\textbf{ Should we scale (???)}. If the response has more than two levels, then the svm() function will perform multi-classification using the One-Versus-One approach.
+
+The \texttt{tune()} function stores the best model that can be accessed as follows: \texttt{model.tune\$best.parameters} We can now fit the SVM model with those best tuning parameters.
+
+The argument \texttt{scale=TRUE} tells the \textbf{svm()} function to scale each feature to have mean zero or standard deviation one. If the response has more than two levels, then the \texttt{svm()} function will perform multi-classification using the One-Versus-One approach.
 \begin{lstlisting}
 model.svm= svm(y~., data= train_set, kernel= 'linear', gamma= model.tune$best.parameters$gamma, cost= model.tune$best.parameters$Var1)
 summary(model.svm)
 \end{lstlisting}
-The results are displayed below:
+
 \begin{verbatim}
 Parameters:
    SVM-Type:  C-classification 
@@ -539,10 +648,9 @@ plot(x= model.svm, data= svm.train, formula= X1~X2)
 	\captionof{figure}{SVM on train set observations}
 	\label{SVM on train set}
 \end{center}
+We note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
 
-We Note that here the second feature is plotted on the x-axis and the first feature is plotted on the y-axis, 
-The region that is assigned to each class is shown on the right (light blue for 1 to dark purple for 6). The decision boundary between the two classes is linear 
-(because we used the argument kernel="linear"). 
+The region that is assigned to each class is shown on the right (light blue for 1 to dark purple for 6). The decision boundary between the two classes is linear, because we used the argument \texttt{kernel="linear"}. 
 \\We then computer the errors and the confusion matrix.
 \pagebreak
 \begin{lstlisting}
@@ -559,9 +667,9 @@ errors_svm.train = sum(model.svm$fitted != train_set$y)/length(train_set$y)
   6  0  0  0  0  0 26
 0
 \end{verbatim}
-Our train error is null, no observation were miss-classified while training the model. This is not really surprising as we have only 144 observations but 3360 variables. Since p>>n it was easy for the model to define a hyperplane that fully separates the classes. \\
+Our train error is null, no observation were miss-classified while training the model, which means that the linear boundary was enough. This is not really surprising as we have only 144 observations in the train set, but 3360 variables. Since $P \gg N$, it was easy for the model to define a hyperplane that fully separates the classes. 
 
-However we are more interested in the support vector classifier’s performance on the test observations. We call the predict function that takes the SVM model as parameter.
+However we are more interested in the support vector classifier’s performance on the test observations. We call the \texttt{predict} function that takes the SVM model as parameter.
 \begin{lstlisting}
 yhat= predict(model.svm, newdata= test_set)
 confusion_matrix_svm.test= table(yhat, test_set$y)
@@ -584,9 +692,6 @@ plot(x= model.svm, data= test_set, formula= X1~X2)
 	\captionof{figure}{SVM on test set observations}
 	\label{SVM on test set}
 \end{center}
-\subsubsection{Model Analysis}
-Hence, with cost=0.1, 20 observations were miss-classified, our test error is equal to 19,4\%.
-
 
 \pagebreak
 \section{Conclusion}
@@ -595,15 +700,15 @@ Here is a summary of the error-rate we found for each method used so far :
 \begin{tabular}{l c}
 \textbf{Model} & \textbf{Percentage of error} \\
 KNN & 26.8\% \\
-LDA & 17\% \\
-LDA + PCA & 12/13\% \\
-NNET + FDA & 27\% \\
-NNET + FDA + Regularization & 16\% \\
-Random Forest + FDA & 20\% \\
+LDA & 21\% \\
+LDA + PCA & 18\% \\
+NNET + FDA & 28\% \\
+NNET + FDA + Regularization & 21\% \\
+Random Forest + FDA & 16\% \\
 SVM with Linear Kernel & 19.4\%
 \end{tabular}
 \end{center}
 
-The best classifier seems to be the Linear Discriminant Analysis applied on a subset of linar Principal Components.
+The best classifiers seem to be the Linear Discriminant Analysis applied on a subset of linear Principal Components, and the Random Forest applied on the FDA dataset. The performance of our models could have been better if we had more data to work with.
 
 \end{document}
