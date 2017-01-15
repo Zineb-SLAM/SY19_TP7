@@ -1,4 +1,4 @@
-\documentclass[]{report}
+	\documentclass[]{report}
 \usepackage{tikz}
 \newcommand{\inputtikz}[2]{%  
 	\scalebox{#1}{\input{#2}}  
@@ -444,8 +444,51 @@ We could also take advantage of a Principal Component Analysis method to decreas
  	\captionof{figure}{10 fold cross validation to find the best regularization term $\lambda$}
  	\label{fig:nnet_fda_reg_cv}
  \end{center}
+\pagebreak
 
+\subsection{Decision Trees}
+ In this section, we will discuss a set of machine learning methods called decision trees. A decision tree is a very intuitive way to build a classifier (or a regression model) that aims to split the space into smaller pieces, a simple condition is then defined on a single parameter to guide the decision throughout the decision space. A classification tree is often used when an understable and interpretable classifier is needed. However, in our case, we do not need such property.
+ 
+ A single tree can be grown using the function \texttt(tree) available in the library of the same name : 
+ \begin{lstlisting}
+ library(tree)
+ 
+ model.tree = tree(as.factor(y) ~ ., train_set) 
+ model.tree.predicted = predict(model.tree, test_set, type="class")
+ \end{lstlisting}
+ 
+  \begin{center}
+ 	\includegraphics[width=0.6\linewidth]{Figures/tree_full.png}
+ 	\captionof{figure}{Decision Tree}
+ 	\label{fig:tree_full}
+ \end{center}
+ 
+ The grown tree has only 12 terminal nodes. The error-rate on the train set is less than 10\%, however the error-rate on the test set is over 40\%, which means this tree tends to overfit the train set. We could slightly improve the performance of the tree by pruning it using a cross validation method, but this would not make much sense for a 3660-dimension space made of very low-level features : how could a handful of conditions on pixel values could be enough to determine the correct emotion in most cases ?
+ 
+ That is why we can once again reduce the number of dimensions using FDA. The tree has a 7 terminal nodes, a 10 fold cross-validation algorithm confirms that there is no need for pruning this tree. This decision tree yields to an error-rate of about 20\%.
+ 
+   \begin{center}
+ 	\includegraphics[width=0.6\linewidth]{Figures/tree_fda.png}
+ 	\captionof{figure}{Decision Tree}
+ 	\label{fig:tree_fda}
+ \end{center}
+ 
+    \begin{center}
+ 	\includegraphics[width=0.6\linewidth]{Figures/tree_fda_cv.png}
+ 	\captionof{figure}{Best size}
+ 	\label{fig:tree_fda_cv}
+ \end{center}
+ 
+ It is possible to improve the accuracy of such methods by combining multiple decision trees, the main tradeoff being the unability to interpret the final classifier. This technique consists in building $B$ classification trees using slightly different datasets, getting the response related to an input can be done by having each tree vote for a single class.
+ 
+\begin{lstlisting}
+library(randomForest))
 
+model.random_forest =randomForest(as.factor(y) ~ ., data=train_set)
+model.random_forest.predicted = predict(model.random_forest,newdata=test_set,type='response')
+\end{lstlisting}
+
+We obtain an error-rate of 27\% with the raw dataset, which is better than using a single tree. However, the error-rate on the FDA dataset is still 20\%.
  
 \pagebreak
 \subsection{Support Vector Machines}
